@@ -15,31 +15,26 @@ async function saveNote() {
     loadNotes()
 }
 
-async function loadNotes() {
-    const res = await fetch(`${SERVER_URL}/notes`)
-    const notes = await res.json()
-
-    document.getElementById("notes").innerHTML =
-        notes.map(n => `<h3>${n.title}</h3><p>${n.content}</p>`).join("")
-}
-
 async function saveTodo() {
     const title = document.getElementById("todoTitle").value
     if (!title) return
 
-    await fetch(`${SERVER_URL}/todos`, {
+    await fetch("http://192.168.20.60:3000/todos", { // Bruk IP-en til Proxmox
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+            "Content-Type": "application/json"
+        },
         body: JSON.stringify({ title })
     })
 
     document.getElementById("todoTitle").value = ""
-    loadTodos()
+    loadTodos() // Oppdater lista
 }
 
 async function loadTodos() {
-    const res = await fetch(`${SERVER_URL}/todos`)
+    const res = await fetch("http://192.168.20.60:3000/todos")
     const todos = await res.json()
+
     document.getElementById("todoList").innerHTML =
         todos.map(t => `<li>${t.title}</li>`).join("")
 }

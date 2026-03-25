@@ -75,6 +75,8 @@ app.get("/todos", (req, res) => {
 
 app.post("/todos", (req, res) => {
     const { title } = req.body
+    if (!title) return res.status(400).json({ error: "Tittel mangler" })
+
     db.run("INSERT INTO todos (title) VALUES (?)", [title], function(err) {
         if (err) return res.status(500).json(err)
         res.json({ id: this.lastID, title })
