@@ -28,6 +28,11 @@ CREATE TABLE IF NOT EXISTS tasks (
 )
 `)
 
+db.all("SELECT name FROM sqlite_master WHERE type='table'", [], (err, tables) => {
+    if (err) console.error(err)
+    console.log("Tabeller i databasen:", tables)
+})
+
 const app = express()
 app.use(cors())
 app.use(express.json())
