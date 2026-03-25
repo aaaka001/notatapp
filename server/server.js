@@ -12,6 +12,22 @@ CREATE TABLE IF NOT EXISTS notes (
 )
 `)
 
+db.run(`
+CREATE TABLE IF NOT EXISTS todos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT
+)
+`)
+
+db.run(`
+CREATE TABLE IF NOT EXISTS tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    todo_id INTEGER,
+    text TEXT,
+    done INTEGER
+)
+`)
+
 const app = express()
 app.use(cors())
 app.use(express.json())
