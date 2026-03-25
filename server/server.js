@@ -84,5 +84,5 @@ app.post("/todos", (req, res) => {
 })
 
 app.listen(3000, () => {
-    console.log("Server kjører på port 3000") // På Proxmoxen blir det 192.168.20.60:3000/notes for å sjekke nettsiden min.
+    console.log("Server kjører på port 3000") // På Proxmoxen blir det 192.168.20.60:3000/notes for å sjekke serveren.
 })
