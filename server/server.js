@@ -1,20 +1,50 @@
 const express = require("express")
 const cors = require("cors")
 
+const sqlite3 = require("sqlite3").verbose()
+const db = new sqlite3.Database("./database.db")
+
+db.run(`
+CREATE TABLE IF NOT EXISTS notes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT,
+    content TEXT
+)
+`)
+
 const app = express()
 app.use(cors())
 app.use(express.json())
 
-let notes = []
 let todos = []
 
 app.get("/notes", (req, res) => {
-    res.json(notes)
+    db.all("SELECT * FROM notes", [], (err, rows) => {
+        if (err) {
+            return res.status(500).json(err)
+        }
+        res.json(rows)
+    })
 })
 
 app.post("/notes", (req, res) => {
-    notes.push(req.body)
-    res.json({ message: "Notat lagret" })
+    const { title, content } = req.body
+
+    db.run(
+        "INSERT INTO notes (title, content) VALUES (?, ?)",
+        [title, content],
+        function (err) {
+            if (err) {
+                return res.status(500).json(err)
+            }
+
+            res.json({
+                id: this.lastID,
+                title,
+                content
+            })
+        }
+    )
 })
 
 app.get("/todos", (req, res) => {
