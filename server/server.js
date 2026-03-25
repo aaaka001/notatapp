@@ -32,8 +32,6 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
-let todos = []
-
 app.get("/notes", (req, res) => {
     db.all("SELECT * FROM notes", [], (err, rows) => {
         if (err) {
