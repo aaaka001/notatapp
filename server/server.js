@@ -64,14 +64,20 @@ app.post("/notes", (req, res) => {
 })
 
 app.get("/todos", (req, res) => {
-    res.json(todos)
+    db.all("SELECT * FROM todos", [], (err, rows) => {
+        if (err) return res.status(500).json(err)
+        res.json(rows)
+    })
 })
 
 app.post("/todos", (req, res) => {
-    todos.push(req.body)
-    res.json({ message: "Todo lagret" })
+    const { title } = req.body
+    db.run("INSERT INTO todos (title) VALUES (?)", [title], function(err) {
+        if (err) return res.status(500).json(err)
+        res.json({ id: this.lastID, title })
+    })
 })
 
 app.listen(3000, () => {
-    console.log("Server kjører på port 3000")
+    console.log("Server kjører på port 3000") // På Proxmoxen blir det 192.168.20.60:3000/notes for å sjekke nettsiden min.
 })

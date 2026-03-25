@@ -12,11 +12,19 @@
 
         <input id="title" placeholder="Tittel">
         <textarea id="content"></textarea>
-        
+
         <button onclick="saveNote()">Lagre notat</button>
         <button onclick="loadNotes()">Hent notater</button>
 
         <div id="notes"></div>
+    </div>
+
+    <div class="container">
+        <h2>Todo-liste</h2>
+        <input id="title" placeholder="Ny todo">
+        <button onclick="saveTodo()">Legg til</button>
+        
+        <ul id="todoList"></ul>
     </div>
 
     <script src="script.js"></script>
