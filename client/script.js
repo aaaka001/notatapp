@@ -40,20 +40,41 @@ async function saveNote() {
 }
 
 async function loadNotes() {
-    const res = await fetch(`${SERVER_URL}/notes`, {
-        headers: getHeaders()
-    })
-    const notes = await res.json()
+    try {
+        const res = await fetch(`${SERVER_URL}/notes`, {
+            headers: getHeaders()
+        })
+        const notes = await res.json()
 
-    document.getElementById("notes").innerHTML =
-        notes.map(n => `
-            <div>
-                <h3>${n.title}</h3>
-                <p>${n.content}</p>
-                <button onclick="editNote(${n.id}, '${n.title.replace(/'/g, "\\'")}', '${n.content.replace(/'/g, "\\'")}')">Rediger</button>
-                <button onclick="deleteNote(${n.id})">Slett</button>
-            </div>
-        `).join("")
+        document.getElementById("notes").innerHTML =
+            notes.map(n => `
+                <div data-id="${n.id}">
+                    <h3>${n.title}</h3>
+                    <p>${n.content}</p>
+                    <button class="edit-note-btn" data-note-id="${n.id}" data-title="${n.title.replace(/"/g, '&quot;')}" data-content="${n.content.replace(/"/g, '&quot;')}">Rediger</button>
+                    <button class="delete-note-btn" data-note-id="${n.id}">Slett</button>
+                </div>
+            `).join("")
+
+        // Add event listeners after creating the elements
+        document.querySelectorAll('.edit-note-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = parseInt(e.target.dataset.noteId)
+                const title = e.target.dataset.title
+                const content = e.target.dataset.content
+                editNote(id, title, content)
+            })
+        })
+
+        document.querySelectorAll('.delete-note-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = parseInt(e.target.dataset.noteId)
+                deleteNote(id)
+            })
+        })
+    } catch (error) {
+        console.error("Error loading notes:", error)
+    }
 }
 
 async function saveTodo() {
@@ -83,28 +104,64 @@ async function saveTodo() {
 }
 
 async function loadTodos() {
-    const res = await fetch(`${SERVER_URL}/todos`, {
-        headers: getHeaders()
-    })
-    const todos = await res.json()
+    try {
+        const res = await fetch(`${SERVER_URL}/todos`, {
+            headers: getHeaders()
+        })
+        const todos = await res.json()
 
-    document.getElementById("todoList").innerHTML =
-        todos.map(t => `
-            <li class="${t.completed ? 'completed' : ''}">
-                <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTodo(${t.id}, this.checked)">
-                <span>${t.title}</span>
-                <button onclick="editTodo(${t.id}, '${t.title.replace(/'/g, "\\'")}')">Rediger</button>
-                <button onclick="deleteTodo(${t.id})">Slett</button>
-            </li>
-        `).join("")
+        document.getElementById("todoList").innerHTML =
+            todos.map(t => `
+                <li class="${t.completed ? 'completed' : ''}" data-id="${t.id}">
+                    <input type="checkbox" ${t.completed ? 'checked' : ''} data-todo-id="${t.id}">
+                    <span>${t.title}</span>
+                    <button class="edit-btn" data-todo-id="${t.id}" data-title="${t.title.replace(/"/g, '&quot;')}">Rediger</button>
+                    <button class="delete-btn" data-todo-id="${t.id}">Slett</button>
+                </li>
+            `).join("")
+
+        // Add event listeners after creating the elements
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = parseInt(e.target.dataset.todoId)
+                const title = e.target.dataset.title
+                editTodo(id, title)
+            })
+        })
+
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = parseInt(e.target.dataset.todoId)
+                deleteTodo(id)
+            })
+        })
+
+        document.querySelectorAll('#todoList input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                const id = parseInt(e.target.dataset.todoId)
+                const completed = e.target.checked
+                toggleTodo(id, completed)
+            })
+        })
+    } catch (error) {
+        console.error("Error loading todos:", error)
+    }
 }
 
 async function deleteNote(id) {
-    await fetch(`${SERVER_URL}/notes/${id}`, {
-        method: "DELETE",
-        headers: getHeaders()
-    })
-    loadNotes()
+    try {
+        const response = await fetch(`${SERVER_URL}/notes/${id}`, {
+            method: "DELETE",
+            headers: getHeaders()
+        })
+        if (response.ok) {
+            loadNotes()
+        } else {
+            console.error("Delete failed:", response.status)
+        }
+    } catch (error) {
+        console.error("Delete error:", error)
+    }
 }
 
 function editNote(id, title, content) {
@@ -115,11 +172,19 @@ function editNote(id, title, content) {
 }
 
 async function deleteTodo(id) {
-    await fetch(`${SERVER_URL}/todos/${id}`, {
-        method: "DELETE",
-        headers: getHeaders()
-    })
-    loadTodos()
+    try {
+        const response = await fetch(`${SERVER_URL}/todos/${id}`, {
+            method: "DELETE",
+            headers: getHeaders()
+        })
+        if (response.ok) {
+            loadTodos()
+        } else {
+            console.error("Delete failed:", response.status)
+        }
+    } catch (error) {
+        console.error("Delete error:", error)
+    }
 }
 
 function editTodo(id, title) {
@@ -129,28 +194,42 @@ function editTodo(id, title) {
 }
 
 async function toggleTodo(id, completed) {
-    // Update the database
-    await fetch(`${SERVER_URL}/todos/${id}`, {
-        method: "PATCH",
-        headers: getHeaders(),
-        body: JSON.stringify({ completed: completed ? 1 : 0 })
-    })
-    
-    // Update the UI immediately without re-rendering the whole list
-    const checkbox = event.target;
-    const li = checkbox.closest('li');
-    const span = li.querySelector('span');
-    
-    if (completed) {
-        li.classList.add('completed');
-        span.style.textDecoration = 'line-through';
-        span.style.color = '#6c757d';
-        li.style.opacity = '0.6';
-    } else {
-        li.classList.remove('completed');
-        span.style.textDecoration = 'none';
-        span.style.color = '';
-        li.style.opacity = '';
+    try {
+        // Update the database
+        const response = await fetch(`${SERVER_URL}/todos/${id}`, {
+            method: "PATCH",
+            headers: getHeaders(),
+            body: JSON.stringify({ completed: completed ? 1 : 0 })
+        })
+
+        if (response.ok) {
+            // Update the UI immediately without re-rendering the whole list
+            const checkbox = document.querySelector(`input[data-todo-id="${id}"]`)
+            const li = checkbox.closest('li')
+            const span = li.querySelector('span')
+            
+            if (completed) {
+                li.classList.add('completed')
+                span.style.textDecoration = 'line-through'
+                span.style.color = '#6c757d'
+                li.style.opacity = '0.6'
+            } else {
+                li.classList.remove('completed')
+                span.style.textDecoration = 'none'
+                span.style.color = ''
+                li.style.opacity = ''
+            }
+        } else {
+            console.error("Toggle failed:", response.status)
+            // Revert checkbox state on error
+            const checkbox = document.querySelector(`input[data-todo-id="${id}"]`)
+            checkbox.checked = !completed
+        }
+    } catch (error) {
+        console.error("Toggle error:", error)
+        // Revert checkbox state on error
+        const checkbox = document.querySelector(`input[data-todo-id="${id}"]`)
+        checkbox.checked = !completed
     }
 }
 
