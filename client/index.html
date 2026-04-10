@@ -10,10 +10,10 @@
     <div class="container">
         <h1>Notatapp - Aayan</h1>
 
-        <input id="title" placeholder="Tittel">
+        <input id="title" place holder="Tittel">
         <textarea id="content"></textarea>
 
-        <button onclick="saveNote()">Lagre notat</button>
+        <button id="saveBtn" onclick="saveNote()">Lagre notat</button>
         <button onclick="loadNotes()">Hent notater</button>
 
         <div id="notes"></div>
@@ -22,7 +22,7 @@
     <div class="container">
         <h2>Todo-liste</h2>
         <input id="todoTitle" placeholder="Ny todo">
-        <button onclick="saveTodo()">Legg til</button>
+        <button id="saveTodoBtn" onclick="saveTodo()">Legg til</button>
         <button onclick="loadTodos()">Hent todos</button>
         <ul id="todoList"></ul>
     </div>
