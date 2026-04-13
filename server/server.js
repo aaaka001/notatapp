@@ -87,6 +87,68 @@ app.get("/todos", (req, res) => {
     })
 })
 
+app.get("/todos/:id/tasks", (req, res) => {
+    const { id } = req.params
+    db.all("SELECT * FROM tasks WHERE todo_id = ?", [id], (err, rows) => {
+        if (err) return res.status(500).json(err)
+        res.json(rows)
+    })
+})
+
+app.post("/todos/:id/tasks", (req, res) => {
+    const { id } = req.params
+    const { text, done = 0 } = req.body
+    if (!text) return res.status(400).json({ error: "Oppgavetekst mangler" })
+
+    db.run(
+        "INSERT INTO tasks (todo_id, text, done) VALUES (?, ?, ?)",
+        [id, text, done],
+        function (err) {
+            if (err) return res.status(500).json(err)
+            res.json({ id: this.lastID, todo_id: Number(id), text, done })
+        }
+    )
+})
+
+app.patch("/tasks/:id", (req, res) => {
+    const { text, done } = req.body
+    const { id } = req.params
+
+    let query = "UPDATE tasks SET "
+    let params = []
+    let updates = []
+
+    if (text !== undefined) {
+        updates.push("text = ?")
+        params.push(text)
+    }
+    if (done !== undefined) {
+        updates.push("done = ?")
+        params.push(done)
+    }
+
+    if (updates.length === 0) {
+        return res.status(400).json({ error: "Ingen oppdateringer spesifisert" })
+    }
+
+    query += updates.join(", ") + " WHERE id = ?"
+    params.push(id)
+
+    db.run(query, params, function (err) {
+        if (err) return res.status(500).json(err)
+        res.json({ updated: this.changes })
+    })
+})
+
+app.delete("/tasks/:id", (req, res) => {
+    const { id } = req.params
+
+    db.run("DELETE FROM tasks WHERE id = ?", [id], function (err) {
+        if (err) return res.status(500).json(err)
+        res.json({ deleted: this.changes })
+    })
+})
+
 app.post("/todos", (req, res) => {
     const { title, completed = 0 } = req.body
     if (!title) return res.status(400).json({ error: "Tittel mangler" })
@@ -130,9 +192,13 @@ app.patch("/todos/:id", (req, res) => {
 app.delete("/todos/:id", (req, res) => {
     const { id } = req.params
 
-    db.run("DELETE FROM todos WHERE id = ?", [id], function (err) {
+    db.run("DELETE FROM tasks WHERE todo_id = ?", [id], function (err) {
         if (err) return res.status(500).json(err)
-        res.json({ deleted: this.changes })
+
+        db.run("DELETE FROM todos WHERE id = ?", [id], function (err) {
+            if (err) return res.status(500).json(err)
+            res.json({ deleted: this.changes })
+        })
     })
 })
 
